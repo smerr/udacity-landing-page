@@ -13,10 +13,7 @@
  *
  */
 
-/**
- * Define Global Variables
- *
- */
+/**Define Global Variables*/
 
 /**
  * End Global Variables
@@ -47,3 +44,17 @@
 // Scroll to section on link click
 
 // Set sections as active
+
+document.addEventListener("DOMContentLoaded", function () {
+  // this function runs when the DOM is ready, i.e. when the document has been parsed
+  document.getElementById("user-greeting").textContent = "Welcome back, Bart";
+});
+
+let main = document.getElementsByTagName("main");
+main = main[0];
+let navElement = main.getElementsByTagName("section");
+let newSection = navElement[0].dataset.nav;
+
+let li = document.createElement("li");
+let ul = document.getElementsByTagName("ul");
+ul[0].appendChild(li);
