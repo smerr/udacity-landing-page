@@ -27,8 +27,6 @@
  *
  */
 
-// build the nav
-
 // Add class 'active' to section when near top of viewport
 
 // Scroll to anchor ID using scrollTO event
@@ -39,22 +37,52 @@
  *
  */
 
-// Build menu
-
 // Scroll to section on link click
 
 // Set sections as active
 
-document.addEventListener("DOMContentLoaded", function () {
-  // this function runs when the DOM is ready, i.e. when the document has been parsed
-  document.getElementById("user-greeting").textContent = "Welcome back, Bart";
-});
+// https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
 
-let main = document.getElementsByTagName("main");
-main = main[0];
-let navElement = main.getElementsByTagName("section");
-let newSection = navElement[0].dataset.nav;
+const activeClass = "active";
+const menuItemClass = "menu__link";
+const scrollOptions = { behavior: "smooth" };
 
-let li = document.createElement("li");
-let ul = document.getElementsByTagName("ul");
-ul[0].appendChild(li);
+function onLoad() {
+  let main = document.getElementsByTagName("main")[0];
+  let sectionElements = main.getElementsByTagName("section");
+
+  for (const element of sectionElements) {
+    const id = element.getAttribute("id");
+    const newSection = element.dataset.nav;
+    const li = document.createElement("li");
+    const ul = document.getElementsByTagName("ul")[0];
+
+    ul.appendChild(li);
+    li.classList.add(menuItemClass);
+    li.setAttribute("data-sectionid", id);
+    li.appendChild(document.createTextNode(newSection));
+  }
+
+  onNavClick();
+
+  document.getElementById("navbar__list").addEventListener("click", onNavClick);
+}
+
+function onNavClick(event) {
+  const target = event.target;
+  if (target.className.includes(menuItemClass)) {
+    const section = document.getElementById(target.dataset.sectionid);
+    const links = document.getElementsByClassName(menuItemClass);
+
+    for (const link of links) {
+      link.classList.remove(activeClass);
+    }
+
+    section.classList.add(activeClass);
+    target.classList.add(activeClass);
+
+    section.scrollIntoView(scrollOptions);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", onLoad);
