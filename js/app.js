@@ -42,6 +42,8 @@
 // Set sections as active
 
 // https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
+let lockScroll = false;
+let lastScrollTimeout = false;
 
 const activeClass = "active";
 const menuItemClass = "menu__link";
@@ -63,8 +65,6 @@ function onLoad() {
     li.appendChild(document.createTextNode(newSection));
   }
 
-  onNavClick();
-
   document.getElementById("navbar__list").addEventListener("click", onNavClick);
 }
 
@@ -85,4 +85,33 @@ function onNavClick(event) {
   }
 }
 
+function onScroll(event) {
+  if (lockScroll) return;
+
+  if (lastScrollTimeout) clearTimeout(lastScrollTimeout);
+
+  lastScrollTimeout = setTimeout(() => {
+    lockScroll = true;
+    console.log("iHeight", window.innerHeight);
+    console.log("iWidth", window.innerWidth);
+    console.log("cHeight", document.documentElement.clientHeight);
+    console.log("cWidth", document.documentElement.clientWidth);
+    const allSections = document.getElementsByTagName("section");
+    for (const section of allSections) {
+      let bounding = section.getBoundingClientRect();
+      let bool =
+        bounding.top <= 1 &&
+        bounding.left >= 0 &&
+        bounding.bottom >=
+          (window.innerHeight || document.documentElement.clientHeight) &&
+        bounding.right <=
+          (window.innerWidth || document.documentElement.clientWidth);
+      console.log(section.getAttribute("id"), bounding);
+      console.log(bool);
+    }
+    lockScroll = false;
+  }, 300);
+}
+
+document.addEventListener("scroll", onScroll, { passive: true });
 document.addEventListener("DOMContentLoaded", onLoad);
