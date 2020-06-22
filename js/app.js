@@ -13,35 +13,6 @@
  *
  */
 
-/**Define Global Variables*/
-
-/**
- * End Global Variables
- * Start Helper Functions
- *
- */
-
-/**
- * End Helper Functions
- * Begin Main Functions
- *
- */
-
-// Add class 'active' to section when near top of viewport
-
-// Scroll to anchor ID using scrollTO event
-
-/**
- * End Main Functions
- * Begin Events
- *
- */
-
-// Scroll to section on link click
-
-// Set sections as active
-
-// https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
 let lockScroll = false;
 let lastScrollTimeout = false;
 
@@ -49,19 +20,41 @@ const activeClass = "active";
 const menuItemClass = "menu__link";
 const scrollOptions = { behavior: "smooth" };
 
-function onLoad() {
-  let main = document.getElementsByTagName("main")[0];
-  let sectionElements = main.getElementsByTagName("section");
+function getNavBarList() {
+  return document.getElementById("navbar__list");
+}
 
-  for (const element of sectionElements) {
+function getAllSections() {
+  return document.getElementsByTagName("section");
+}
+
+function getListItems() {
+  return document.getElementsByClassName(menuItemClass);
+}
+
+function percentageInView(element) {
+  // Get the relevant measurements and positions
+  const scrollTop = window.scrollY;
+  const viewportHeight = window.innerHeight;
+  const elementOffsetTop = element.offsetTop;
+
+  // Calculate percentage of the element that's been seen
+  const distance = scrollTop + (viewportHeight - elementOffsetTop);
+
+  // the difference
+  return Math.abs(distance - viewportHeight);
+}
+
+function onLoad() {
+  for (const element of getAllSections()) {
     const id = element.getAttribute("id");
     const newSection = element.dataset.nav;
     const li = document.createElement("li");
-    const ul = document.getElementsByTagName("ul")[0];
+    const ul = getNavBarList();
 
     ul.appendChild(li);
+    li.dataset.sectionid = id;
     li.classList.add(menuItemClass);
-    li.setAttribute("data-sectionid", id);
     li.appendChild(document.createTextNode(newSection));
   }
 
@@ -72,43 +65,83 @@ function onNavClick(event) {
   const target = event.target;
   if (target.className.includes(menuItemClass)) {
     const section = document.getElementById(target.dataset.sectionid);
-    const links = document.getElementsByClassName(menuItemClass);
 
-    for (const link of links) {
+    for (const link of getListItems()) {
       link.classList.remove(activeClass);
     }
 
-    section.classList.add(activeClass);
     target.classList.add(activeClass);
+    section.classList.add(activeClass);
 
     section.scrollIntoView(scrollOptions);
   }
 }
 
-function onScroll(event) {
+function onScroll() {
   if (lockScroll) return;
 
-  if (lastScrollTimeout) clearTimeout(lastScrollTimeout);
+  if (lastScrollTimeout) {
+    clearTimeout(lastScrollTimeout);
+  }
 
   lastScrollTimeout = setTimeout(() => {
     lockScroll = true;
-    console.log("iHeight", window.innerHeight);
-    console.log("iWidth", window.innerWidth);
-    console.log("cHeight", document.documentElement.clientHeight);
-    console.log("cWidth", document.documentElement.clientWidth);
-    const allSections = document.getElementsByTagName("section");
-    for (const section of allSections) {
-      let bounding = section.getBoundingClientRect();
-      let bool =
-        bounding.top <= 1 &&
-        bounding.left >= 0 &&
-        bounding.bottom >=
-          (window.innerHeight || document.documentElement.clientHeight) &&
-        bounding.right <=
-          (window.innerWidth || document.documentElement.clientWidth);
-      console.log(section.getAttribute("id"), bounding);
-      console.log(bool);
+
+    let counter = 0;
+    let falseCounter = 0;
+    let activeSection = false;
+    let smallestInViewValue = false;
+    const sectionsInView = [];
+
+    for (const section of getAllSections()) {
+      counter++;
+
+      const bounding = section.getBoundingClientRect();
+      const bool = bounding.top < window.innerHeight && bounding.bottom >= 0;
+
+      if (section.classList.contains(activeClass)) {
+        activeSection = section;
+      }
+
+      if (!bool) {
+        falseCounter++;
+        section.classList.remove(activeClass);
+      }
+
+      if (bool) {
+        const value = percentageInView(section);
+        section.dataset.inView = value;
+        sectionsInView.push(section);
+
+        if (smallestInViewValue === false || smallestInViewValue > value) {
+          smallestInViewValue = value;
+        }
+      }
     }
+
+    for (const section of sectionsInView) {
+      const value = section.dataset.inView;
+
+      if (Number(value) === 0 || Number(value) === smallestInViewValue) {
+        activeSection = section;
+        section.classList.add(activeClass);
+      } else {
+        section.classList.remove(activeClass);
+      }
+    }
+
+    for (const link of getListItems()) {
+      const linkSectionId = link.dataset.sectionid;
+
+      if (activeSection && linkSectionId === activeSection.getAttribute("id")) {
+        link.classList.add(activeClass);
+      } else link.classList.remove(activeClass);
+    }
+
+    if (activeSection && falseCounter === counter) {
+      activeSection.classList.add(activeClass);
+    }
+
     lockScroll = false;
   }, 300);
 }
